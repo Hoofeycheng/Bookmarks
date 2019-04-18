@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+
+{% block title %}
+    用户详情
+{% endblock %}
+
+{% block content %}
+    <h1>{{ user.username }}</h1>
+    <div class="profile-info">
+        {% if user.profile and user.profile.photo %}
+            {% thumbnail user.profile.photo "180x180" crop="100%" as im %}
+                    <img src="{{ im.url }}" class="user-detail">
+            {% endthumbnail %}
+        {% else %}
+                <img src="/media/image/2019/401.jpg" class="user-detail">
+        {% endif %}
+    </div>
+
+    <span class="count">
+        <span class="total"><em>{{ total_followers }}</em>个关注他的人</span>
+    </span>
+    <a class="follow button" data-id="{{ user.id }}" data-action="{% if request.user in followers %}unfollow{% else %}follow{% endif %}">
+        {% if request.user not in followers %}
+            关注
+        {% else %}
+            取消关注
+        {% endif %}
+    </a>
+    <div id="image-list" class="image-container">
+        {% for follower in followers %}
+            <div>
+                <a href="{{ follower.get_absolute_url }}">
+                    <img src="{% if follower.profile and follower.profile.photo %}{{ follower.profile.photo.url }}{% else %}/media/image/2019/401.jpg{% endif %}">
+                    <p>{{ follower.username }}</p>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+
+{% block domready %}
+    $('a.follow').click(function (e) {
+            e.preventDefault();
+            $.post('{% url "follow" %}',
+                {
+                    id:$(this).data("id"),
+                    action:$(this).data("action")
+                },
+            function (data) {
+                if (data["status"] === "ok"){
+                    let previous_action = $("a.follow").data("action");
+                    $('a.follow').data("action",previous_action === 'follow' ? 'unfollow' : 'follow');
+                    $('a.follow').text(previous_action === 'follow' ? '取消关注' : '关注');
+                    let previous_follows = parseInt($('em').text());
+                    $("em").text(previous_action === 'follow' ? previous_follows + 1 : previous_follows - 1);
+                    window.location.reload();
+                }
+            })
+        })
+{% endblock %}
+
+

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+
+{% block title %}
+    用户列表
+{% endblock %}
+
+{% block content %}
+    <h1>用户列表</h1>
+    <div id="people-list">
+        {% for user in users %}
+            <div class="user">
+                <a href="{{ user.get_absolute_url }}">
+                {% if user.profile and user.profile.photo %}
+                    {% thumbnail user.profile.photo "80x80" crop="100%" as im %}
+                        <div>
+                            <img src="{% if user.profile and user.profile.photo %}{{ user.profile.photo.url }}{% else %}/media/image/2019/401.jpg{% endif %}">
+                        </div>
+                    {% endthumbnail %}
+                {% else %}
+                    <div>
+                        <img src="/media/image/2019/401.jpg">
+                    </div>
+                {% endif %}
+            </a>
+            <div class="info">
+                <a class="title" href="{{ user.get_absolute_url }}">
+                    {{ user.username }}
+                </a>
+            </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+
+
+

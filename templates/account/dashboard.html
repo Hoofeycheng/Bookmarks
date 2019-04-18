@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    主页
+{% endblock %}
+
+{% block content %}
+    {% if messages %}
+        <ul class="messages">
+            {% for messages in messages %}
+                <li class="{{ message.tags }}">{{ messages }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <h1>主页</h1>
+    <p>欢迎来到我的主页....</p>
+    <p>你可以编辑你的<a href="{% url 'edit' %}">个人信息</a></p>
+    <p>请把书签小程序拖动到书签栏使用：<a href="javascript:{% include 'bookmarklet_launcher.js' %}" class="button">放入书签</a></p>
+    <div id="action_list">
+        {% load thumbnail %}
+        {% for action in actions %}
+            {% with user=action.user profile=action.user.profile %}
+                <div class="action">
+                    <div class="images">
+                        {% if profile.photo %}
+                            {% thumbnail user.profile.photo "80x80" crop="100%" as im %}
+                                <img src="{{ im.url }}" alt="{{ user.username }}" class="item-img">
+                            {% endthumbnail %}
+                            {% if section.target %}
+                                {% with target=action.target %}
+                                    {% if target.image %}
+                                        {% thumbnail target.image "80x80" crop="100%" as im %}
+                                          <img src="{{ im.url }}" class="item-img">
+                                        {% endthumbnail %}
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                <div class="info">
+                    <p>
+                        <span class="date">{{ action.created|timesince }}之前</span>
+                        <br>
+                        <a href="{{ user.get_absolute_url }}">
+                            {{ user.username }}
+                        </a>
+                        {{ action.verb }}
+                        {% if action.target %}
+                            <a href="{{ action.target.get_absolute_url }}">
+                                {{ action.target }}
+                            </a>
+                        {% endif %}
+                    </p>
+                </div>
+                </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+{% endblock %}
+
+
+{#<a href="#" class="close">X</a>#}
+

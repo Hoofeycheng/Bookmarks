@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ image_obj.title }}
+{% endblock %}
+
+{% block content %}
+    <h1>{{ image_obj.title }}</h1>
+{#    thumbnail,第三方模块,用来固定缩略图的大小，这里我们定义了一个固定宽度为300像素的缩略图，当用户第一次打开图片详情页面时，一个缩略图会被创建在静态文件夹下，页面的原图片链接会被缩略图所取代#}
+    {% load thumbnail %}
+    {% thumbnail image_obj.image "300x200" crop="100%" as im %}
+        <a href="{{ image_obj.image.url }}">
+            <img src="{{ im.url }}" class="image-detail">
+        </a>
+    {% endthumbnail %}
+
+    {% with total_likes=image_obj.user_like.count users_like=image_obj.user_like.all %}
+        <div class="image-info">
+            <div>
+                <span class="count"><em>{{ total_likes }}</em>人喜欢</span>
+                <span class="count">有{{ total_views }}人访问</span>
+                <a class="like button" data-id="{{ image_obj.id }}" data-action="{% if request.user in users_like %}unlike{% else %}like{% endif %}">
+                    {% if request.user not in users_like %}
+                        喜欢
+                    {% else %}
+                        不喜欢
+                    {% endif %}
+                </a>
+                {{ image_obj.description|linebreaks }}
+            </div>
+        </div>
+        <div class="image-likes">
+            {% for user in users_like %}
+                <div>
+{#                    <img src="{{ user.profile.photo.url }}">#}
+                    <img src="{% if user.profile and user.profile.photo %}{{ user.profile.photo.url }}{% else %}/media/image/2019/401.jpg{% endif %}">
+                    <p>{{ user.username }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endwith %}
+{% endblock %}
+
+{% block domready %}
+{#// 使用a.like 选择所有输入like类的a标签#}
+    $('a.like').click(function (e) {
+{#        // 阻止打开新的超链接，阻止a标签的默认功能#}
+        e.preventDefault();
+        $.post('{% url "images:like" %}',
+            {
+                id: $(this).data("id"),
+                action: $(this).data("action")
+            },
+        function (data) {
+            if(data["status"] === "ok"){
+                let previous_action = $("a.like").data("action");
+{#                // 切换data-action的属性#}
+                $('a.like').data("action", previous_action === 'like' ? 'unlike' : "like");
+{#                // 切换按钮的文本#}
+                $('a.like').text(previous_action === 'like' ? '不喜欢' : "喜欢");
+{#               更新总的喜欢人数 #}
+                let previous_likes = parseInt($('span em').text());
+                $("span em").text(previous_action === 'like' ? previous_likes + 1 : previous_likes - 1);
+                window.location.reload();
+            }
+        })
+    })
+{% endblock %}
+
+
+
